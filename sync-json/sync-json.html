@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Công Cụ Đồng Bộ Subtitle</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {}
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-sans min-h-screen flex flex-col transition-colors duration-200">
+    <!-- Navbar -->
+    <nav class="bg-indigo-600 dark:bg-indigo-800 text-white shadow-md p-4 sticky top-0 z-50 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center">
+                <i class="fas fa-sync-alt mr-3"></i> Đồng Bộ Subtitle với Kịch Bản Gốc
+            </h1>
+            <div class="flex gap-3 items-center">
+                <label for="fileInput" class="cursor-pointer bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition font-medium text-sm flex items-center">
+                    <i class="fas fa-upload mr-2"></i> Tải File JSON
+                </label>
+                <input type="file" id="fileInput" accept=".json" class="hidden" onchange="handleFileUpload(event)" />
+                <button onclick="downloadJSON()" id="btnDownload" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg shadow transition font-medium text-sm hidden flex items-center">
+                    <i class="fas fa-download mr-2"></i> Xuất JSON
+                </button>
+                <!-- Dark Mode Toggle -->
+                <button onclick="toggleDarkMode()" id="darkModeBtn" class="bg-white/10 hover:bg-white/20 text-white w-10 h-10 rounded-lg transition flex items-center justify-center ml-2" title="Chuyển đổi giao diện">
+                    <i class="fas fa-moon text-lg" id="darkModeIcon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto w-full p-4 flex flex-col gap-4 mt-4">
+        
+        <!-- Script Input Area -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors duration-200">
+            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                <i class="fas fa-file-alt text-indigo-500 dark:text-indigo-400 mr-1"></i> Nhập Kịch Bản Gốc (Chỉ cần copy/paste đoạn text)
+            </label>
+            <textarea id="scriptInput" rows="4" class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-slate-900 outline-none transition-all resize-y text-slate-700 dark:text-slate-200 leading-relaxed dark:placeholder-slate-500" placeholder="Ví dụ: Xin chào các bạn. Hôm nay chúng ta sẽ tìm hiểu về AI..."></textarea>
+            
+            <div class="mt-4 flex justify-end gap-3">
+                <button onclick="resetData()" class="px-5 py-2 rounded-lg font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors flex items-center">
+                    <i class="fas fa-undo mr-2"></i> Khôi phục gốc
+                </button>
+                <button onclick="syncWithScript()" class="px-6 py-2 rounded-lg font-bold text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 shadow-md hover:shadow-lg transition-all flex items-center">
+                    <i class="fas fa-magic mr-2"></i> Bắt đầu Đồng Bộ
+                </button>
+            </div>
+        </div>
+
+        <!-- Controls Bar -->
+        <div id="controlsBar" class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-wrap justify-between items-center gap-4 hidden transition-colors duration-200">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center bg-slate-100 dark:bg-slate-900 p-1 rounded-lg">
+                    <button id="btnViewWord" onclick="setViewMode('word')" class="px-4 py-1.5 rounded-md text-sm font-bold bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 transition-all">
+                        Theo từ
+                    </button>
+                    <button id="btnViewSentence" onclick="setViewMode('sentence')" class="px-4 py-1.5 rounded-md text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all">
+                        Theo câu
+                    </button>
+                </div>
+                <div class="text-sm">
+                    <span class="text-slate-500 dark:text-slate-400">Đang hiển thị: </span>
+                    <span id="rowCount" class="text-indigo-600 dark:text-indigo-300 font-bold bg-indigo-50 dark:bg-indigo-900/50 px-2 py-0.5 rounded">0</span>
+                </div>
+            </div>
+            
+            <label class="flex items-center cursor-pointer border-l border-slate-200 dark:border-slate-700 pl-4">
+                <input type="checkbox" id="filterModified" class="form-checkbox h-4 w-4 text-indigo-600 dark:bg-slate-700 dark:border-slate-600 rounded transition duration-150 ease-in-out cursor-pointer" onchange="toggleFilter()" />
+                <span class="ml-2 text-sm text-slate-700 dark:text-slate-300 font-bold select-none hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                    Chỉ hiện mục đã sửa
+                </span>
+            </label>
+        </div>
+
+        <!-- Table Container -->
+        <div id="tableContainer" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex-grow hidden transition-colors duration-200">
+            <div class="overflow-x-auto max-h-[60vh]">
+                <table class="min-w-full text-left text-sm whitespace-nowrap">
+                    <thead class="uppercase tracking-wider border-b-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900/50 sticky top-0 z-10 text-slate-600 dark:text-slate-400 text-xs font-bold transition-colors duration-200">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 border-x border-slate-200 dark:border-slate-700 w-16 text-center">STT</th>
+                            <th scope="col" id="thOriginal" class="px-6 py-3 border-x border-slate-200 dark:border-slate-700 w-1/4">Gốc (Từ file JSON)</th>
+                            <th scope="col" id="thScript" class="px-6 py-3 border-x border-slate-200 dark:border-slate-700 w-1/4 bg-indigo-50/50 dark:bg-indigo-900/20">Kịch bản gốc</th>
+                            <th scope="col" id="thModified" class="px-6 py-3 border-x border-slate-200 dark:border-slate-700 w-1/2">Đã sửa (Đồng bộ kịch bản)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                        <!-- Rows will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="flex flex-col items-center justify-center py-20 text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 border-dashed transition-colors duration-200">
+            <i class="fas fa-file-import text-6xl mb-4 text-slate-300 dark:text-slate-600"></i>
+            <p class="text-lg font-medium text-slate-500 dark:text-slate-400">Vui lòng tải file JSON lên để bắt đầu</p>
+            <p class="text-sm mt-2">Hệ thống sẽ đối chiếu và đồng bộ dấu câu, viết hoa tự động</p>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 flex items-start gap-3 px-4 py-3 rounded-lg shadow-xl font-medium z-50 pointer-events-none max-w-sm border">
+        <i id="toastIcon" class="fas mt-1"></i>
+        <div>
+            <h4 id="toastTitle" class="font-bold text-sm mb-0.5"></h4>
+            <p id="toastMsg" class="text-sm font-normal"></p>
+        </div>
+    </div>
+
+    <script>
+        let jsonData = [];
+        let originalFileName = "sync_data.json";
+        let showOnlyModified = false;
+        let viewMode = "word";
+
+        // --- DARK MODE LOGIC ---
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const htmlEl = document.documentElement;
+            const iconEl = document.getElementById('darkModeIcon');
+
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                htmlEl.classList.add('dark');
+                if(iconEl) iconEl.className = 'fas fa-sun text-lg';
+            } else {
+                if(iconEl) iconEl.className = 'fas fa-moon text-lg';
+            }
+        }
+
+        function toggleDarkMode() {
+            const htmlEl = document.documentElement;
+            const iconEl = document.getElementById('darkModeIcon');
+            
+            if (htmlEl.classList.contains('dark')) {
+                htmlEl.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                iconEl.className = 'fas fa-moon text-lg';
+            } else {
+                htmlEl.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                iconEl.className = 'fas fa-sun text-lg';
+            }
+        }
+
+        // Initialize theme on load
+        document.addEventListener('DOMContentLoaded', initTheme);
+
+        // --- HELPER FUNCTIONS CHO XỬ LÝ KHOẢNG TRẮNG ---
+        const splitSpaces = (str) => {
+            if (!str) return { start: "", core: "", end: "" };
+            const startMatch = str.match(/^\s+/);
+            const start = startMatch ? startMatch[0] : "";
+            const endMatch = str.substring(start.length).match(/\s+$/); 
+            const end = endMatch ? endMatch[0] : "";
+            const core = str.substring(start.length, str.length - end.length);
+            return { start, core, end };
+        };
+
+        const preserveSpaces = (orig, updated) => {
+            if (!orig) return updated;
+            const startMatch = orig.match(/^\s+/);
+            const endMatch = orig.match(/\s+$/);
+            let res = updated;
+            if (startMatch && !res.match(/^\s+/)) res = startMatch[0] + res;
+            if (endMatch && !res.match(/\s+$/)) res = res + endMatch[0];
+            return res;
+        };
+
+        function setViewMode(mode) {
+            viewMode = mode;
+            if (mode === "word") {
+                document.getElementById("btnViewWord").className = "px-4 py-1.5 rounded-md text-sm font-bold bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 transition-all";
+                document.getElementById("btnViewSentence").className = "px-4 py-1.5 rounded-md text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all";
+            } else {
+                document.getElementById("btnViewSentence").className = "px-4 py-1.5 rounded-md text-sm font-bold bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 transition-all";
+                document.getElementById("btnViewWord").className = "px-4 py-1.5 rounded-md text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all";
+            }
+            renderTable();
+        }
+
+        function showToast(title, message, type = "success") {
+            const toast = document.getElementById("toast");
+            const toastIcon = document.getElementById("toastIcon");
+            const toastTitle = document.getElementById("toastTitle");
+            const toastMsg = document.getElementById("toastMsg");
+
+            // Reset classes
+            toast.className = `fixed bottom-5 right-5 transition-all duration-300 flex items-start gap-3 px-4 py-3 rounded-lg shadow-xl z-50 max-w-sm border dark:bg-slate-800`;
+
+            if (type === "success") {
+                toast.classList.add("bg-emerald-50", "text-emerald-900", "border-emerald-200", "dark:bg-emerald-900/30", "dark:text-emerald-200", "dark:border-emerald-800/50");
+                toastIcon.className = "fas fa-check-circle text-emerald-500 dark:text-emerald-400 mt-0.5";
+            } else if (type === "error") {
+                toast.classList.add("bg-rose-50", "text-rose-900", "border-rose-200", "dark:bg-rose-900/30", "dark:text-rose-200", "dark:border-rose-800/50");
+                toastIcon.className = "fas fa-exclamation-circle text-rose-500 dark:text-rose-400 mt-0.5";
+            } else {
+                toast.classList.add("bg-blue-50", "text-blue-900", "border-blue-200", "dark:bg-blue-900/30", "dark:text-blue-200", "dark:border-blue-800/50");
+                toastIcon.className = "fas fa-info-circle text-blue-500 dark:text-blue-400 mt-0.5";
+            }
+
+            toastTitle.textContent = title;
+            toastMsg.textContent = message;
+            toast.classList.remove("translate-y-20", "opacity-0");
+
+            setTimeout(() => {
+                toast.classList.add("translate-y-20", "opacity-0");
+            }, 4000);
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            originalFileName = file.name.replace(".json", "_synced.json");
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const parsedData = JSON.parse(e.target.result);
+                    if (!Array.isArray(parsedData)) throw new Error("File JSON phải là một mảng.");
+
+                    jsonData = parsedData.map((item) => ({
+                        ...item,
+                        original_text: item.text,
+                        words: item.words.map((w) => ({
+                            ...w,
+                            original_text: w.text,
+                            script_match: null
+                        })),
+                    }));
+
+                    document.getElementById("filterModified").checked = false;
+                    showOnlyModified = false;
+
+                    renderTable();
+                    showToast("Thành công", "Đã tải file JSON thành công!", "success");
+
+                    document.getElementById("emptyState").classList.add("hidden");
+                    document.getElementById("controlsBar").classList.remove("hidden");
+                    document.getElementById("tableContainer").classList.remove("hidden");
+                    document.getElementById("btnDownload").classList.remove("hidden");
+                } catch (error) {
+                    showToast("Lỗi đọc file", error.message, "error");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = "";
+        }
+
+        function syncWithScript() {
+            const scriptText = document.getElementById("scriptInput").value.trim();
+            if (!scriptText) {
+                showToast("Cảnh báo", "Vui lòng nhập kịch bản gốc trước khi đồng bộ.", "error");
+                return;
+            }
+            if (jsonData.length === 0) {
+                showToast("Cảnh báo", "Vui lòng tải file JSON lên trước.", "error");
+                return;
+            }
+
+            // Phân tích kịch bản thành các Token
+            const scriptTokens = scriptText.split(/\s+/).filter(t => t.length > 0);
+            
+            // Hàm làm sạch chữ
+            const cleanWord = (str) => str.replace(/[^\p{L}\p{N}]/gu, '').toLowerCase();
+            const scriptClean = scriptTokens.map(cleanWord);
+
+            // Lấy tham chiếu các từ trong JSON
+            let jsonWordRefs = [];
+            jsonData.forEach((sentence, sIndex) => {
+                sentence.words.forEach((word, wIndex) => {
+                    word.script_match = null; // Reset
+                    if ((word.type === "word" || !word.type) && (word.text || "").trim() !== "") {
+                        jsonWordRefs.push({
+                            ref: word,
+                            sIndex: sIndex,
+                            cleanText: cleanWord(word.text)
+                        });
+                    }
+                });
+            });
+
+            // Thuật toán Sequence Alignment (Lookahead Window)
+            let i = 0; // json pointer
+            let j = 0; // script pointer
+            const windowSize = 25; 
+            let changesCount = 0;
+            let modifiedSentences = new Set();
+
+            while (i < jsonWordRefs.length && j < scriptTokens.length) {
+                let jNode = jsonWordRefs[i];
+                let jClean = jNode.cleanText;
+                let sClean = scriptClean[j];
+
+                if (jClean === sClean) {
+                    jNode.ref.script_match = scriptTokens[j];
+                    let newText = preserveSpaces(jNode.ref.original_text, scriptTokens[j]);
+                    if (jNode.ref.text !== newText) {
+                        jNode.ref.text = newText;
+                        changesCount++;
+                        modifiedSentences.add(jNode.sIndex);
+                    }
+                    i++; j++;
+                } else {
+                    let bestMatch = null;
+                    for (let k = 0; k < windowSize && i + k < jsonWordRefs.length; k++) {
+                        for (let l = 0; l < windowSize && j + l < scriptTokens.length; l++) {
+                            if (k === 0 && l === 0) continue;
+                            if (jsonWordRefs[i + k].cleanText === scriptClean[j + l]) {
+                                if (!bestMatch || (k + l < bestMatch.k + bestMatch.l)) {
+                                    bestMatch = { k, l };
+                                }
+                            }
+                        }
+                    }
+
+                    if (bestMatch) {
+                        let gapJRefs = jsonWordRefs.slice(i, i + bestMatch.k);
+                        let gapSToks = scriptTokens.slice(j, j + bestMatch.l);
+
+                        if (bestMatch.k === 0) {
+                            // JSON thiếu từ
+                            let matchNode = jsonWordRefs[i]; 
+                            let combinedScript = gapSToks.join(" ") + " " + scriptTokens[j + bestMatch.l];
+                            matchNode.ref.script_match = combinedScript;
+                            let newText = preserveSpaces(matchNode.ref.original_text, combinedScript);
+                            if (matchNode.ref.text !== newText) {
+                                matchNode.ref.text = newText;
+                                changesCount++;
+                                modifiedSentences.add(matchNode.sIndex);
+                            }
+                            i++; 
+                            j += bestMatch.l + 1; 
+                        } else {
+                            // JSON dư từ hoặc sai
+                            for (let idx = 0; idx < gapJRefs.length; idx++) {
+                                let node = gapJRefs[idx];
+                                if (idx === 0) {
+                                    let scriptStr = gapSToks.join(" ");
+                                    node.ref.script_match = scriptStr || "[-]";
+                                    let newText = preserveSpaces(node.ref.original_text, scriptStr);
+                                    if (node.ref.text !== newText) {
+                                        node.ref.text = newText; 
+                                        changesCount++;
+                                        modifiedSentences.add(node.sIndex);
+                                    }
+                                } else {
+                                    node.ref.script_match = "[-]";
+                                    let newText = preserveSpaces(node.ref.original_text, "");
+                                    if (node.ref.text !== newText) {
+                                        node.ref.text = newText;
+                                        changesCount++;
+                                        modifiedSentences.add(node.sIndex);
+                                    }
+                                }
+                            }
+                            i += bestMatch.k;
+                            j += bestMatch.l;
+                        }
+                    } else {
+                        // Cưỡng bức
+                        jNode.ref.script_match = scriptTokens[j];
+                        let newText = preserveSpaces(jNode.ref.original_text, scriptTokens[j]);
+                        if (jNode.ref.text !== newText) {
+                            jNode.ref.text = newText;
+                            changesCount++;
+                            modifiedSentences.add(jNode.sIndex);
+                        }
+                        i++; j++;
+                    }
+                }
+            }
+
+            // Xử lý từ script cuối dư
+            if (j < scriptTokens.length && jsonWordRefs.length > 0) {
+                let leftover = scriptTokens.slice(j).join(" ");
+                let lastNode = jsonWordRefs[jsonWordRefs.length - 1];
+                let currentMatch = lastNode.ref.script_match && lastNode.ref.script_match !== "[-]" ? lastNode.ref.script_match : "";
+                lastNode.ref.script_match = currentMatch ? currentMatch + " " + leftover : leftover;
+                
+                let origTextForSpaces = lastNode.ref.original_text || "";
+                let endMatch = origTextForSpaces.match(/\s+$/);
+                let currentText = (lastNode.ref.text || "").replace(/\s+$/, '');
+                let appendedText = currentText ? currentText + " " + leftover : leftover;
+                let newText = appendedText + (endMatch ? endMatch[0] : "");
+                
+                if (lastNode.ref.text !== newText) {
+                    lastNode.ref.text = newText;
+                    changesCount++;
+                    modifiedSentences.add(lastNode.sIndex);
+                }
+            }
+
+            // Xử lý từ JSON cuối dư
+            while (i < jsonWordRefs.length) {
+                let jNode = jsonWordRefs[i];
+                jNode.ref.script_match = "[-]";
+                let newText = preserveSpaces(jNode.ref.original_text, "");
+                if (jNode.ref.text !== newText) {
+                    jNode.ref.text = newText;
+                    changesCount++;
+                    modifiedSentences.add(jNode.sIndex);
+                }
+                i++;
+            }
+
+            modifiedSentences.forEach((sIndex) => {
+                const sentence = jsonData[sIndex];
+                sentence.text = sentence.words.map((w) => w.text).join(""); 
+            });
+
+            renderTable();
+
+            if (changesCount > 0) {
+                showToast("Đồng bộ thành công!", `Đã điều chỉnh toàn diện cho ${changesCount} từ JSON.`, "success");
+            } else {
+                showToast("Đã kiểm tra", "Kịch bản và JSON đã khớp 100%, không có thay đổi nào.", "info");
+            }
+        }
+
+        function resetData() {
+            if(jsonData.length === 0) return;
+            let resetCount = 0;
+            jsonData.forEach(sentence => {
+                sentence.words.forEach(word => {
+                    word.script_match = null;
+                    if (word.text !== word.original_text) {
+                        word.text = word.original_text;
+                        resetCount++;
+                    }
+                });
+                sentence.text = sentence.original_text;
+            });
+            renderTable();
+            if (resetCount > 0) showToast("Đã khôi phục", "Dữ liệu đã trở về trạng thái gốc của file.", "info");
+        }
+
+        function toggleFilter() {
+            showOnlyModified = document.getElementById("filterModified").checked;
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById("tableBody");
+            tbody.innerHTML = "";
+            const thOriginal = document.getElementById("thOriginal");
+            const thScript = document.getElementById("thScript");
+            const thModified = document.getElementById("thModified");
+
+            thOriginal.textContent = viewMode === "sentence" ? "Câu gốc" : "Từ gốc";
+            thScript.textContent = viewMode === "sentence" ? "Kịch bản gốc" : "Kịch bản gốc";
+            thModified.textContent = viewMode === "sentence" ? "Câu đã đồng bộ" : "Từ đã đồng bộ";
+
+            let globalId = 1;
+            let displayCount = 0;
+
+            if (viewMode === "sentence") {
+                jsonData.forEach((item) => {
+                    const isModified = item.text !== item.original_text;
+                    if (showOnlyModified && !isModified) { globalId++; return; }
+
+                    const tr = document.createElement("tr");
+                    tr.className = isModified ? "bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 transition-colors" : "hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors";
+
+                    let origHTML = "";
+                    let scriptHTML = "";
+                    let modHTML = "";
+
+                    item.words.forEach((w) => {
+                        const diff = w.text !== w.original_text;
+                        let wOrig = (w.original_text || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                        let wText = (w.text || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                        const isSpaceObj = w.type === "space" || wOrig.trim() === "";
+
+                        if (diff && !isSpaceObj) {
+                            const sOrig = splitSpaces(wOrig);
+                            const sText = splitSpaces(wText);
+                            
+                            origHTML += `<span>${sOrig.start}</span><span class="line-through text-rose-500 dark:text-rose-400">${sOrig.core}</span><span>${sOrig.end}</span>`;
+                            
+                            if (sText.core !== "") {
+                                modHTML += `<span>${sText.start}</span><span class="font-bold text-blue-700 bg-blue-100 dark:text-blue-300 dark:bg-blue-900/40 px-1 rounded mx-[1px] shadow-sm">${sText.core}</span><span>${sText.end}</span>`;
+                            } else {
+                                modHTML += `<span>${sText.start}${sText.end}</span>`;
+                            }
+                        } else {
+                            origHTML += `<span>${wOrig}</span>`;
+                            modHTML += `<span>${wText}</span>`;
+                        }
+
+                        if (!isSpaceObj) {
+                            let wScriptText = w.script_match || "[-]";
+                            if (wScriptText !== "[-]") {
+                                let safeScript = wScriptText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                                scriptHTML += `<span class="font-semibold text-indigo-700 bg-indigo-50/80 border border-indigo-100 dark:text-indigo-300 dark:bg-indigo-900/40 dark:border-indigo-800/50 px-1 rounded mx-[1px]">${safeScript}</span>`;
+                            } else {
+                                scriptHTML += `<span class="text-slate-300 dark:text-slate-600 italic mx-[1px]">[-]</span>`;
+                            }
+                        } else {
+                            scriptHTML += `<span>${w.original_text || " "}</span>`;
+                        }
+                    });
+
+                    let modifiedContent = `<div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center w-full justify-between"><div class="whitespace-pre-wrap leading-relaxed">${modHTML}</div>`;
+                    if (isModified) {
+                        modifiedContent += `<span class="inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-amber-200 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 shrink-0"><i class="fas fa-pen-nib mr-1"></i> Đã sửa</span>`;
+                    }
+                    modifiedContent += `</div>`;
+
+                    tr.innerHTML = `
+                        <td class="px-4 py-3 border-x border-slate-200 dark:border-slate-700 text-center font-mono text-slate-400 dark:text-slate-500 align-top">${globalId}</td>
+                        <td class="px-6 py-3 border-x border-slate-200 dark:border-slate-700 whitespace-pre-wrap align-top text-slate-500 dark:text-slate-400 leading-relaxed">${origHTML}</td>
+                        <td class="px-6 py-3 border-x border-slate-200 dark:border-slate-700 whitespace-pre-wrap align-top text-slate-700 dark:text-slate-300 leading-relaxed bg-indigo-50/30 dark:bg-indigo-900/20">${scriptHTML}</td>
+                        <td class="px-6 py-3 border-x border-slate-200 dark:border-slate-700 align-top text-slate-800 dark:text-slate-200">${modifiedContent}</td>
+                    `;
+                    tbody.appendChild(tr);
+                    displayCount++; globalId++;
+                });
+            } else {
+                jsonData.forEach((item, sIndex) => {
+                    item.words.forEach((wordObj, wIndex) => {
+                        const isSpaceObj = wordObj.type === "space" || (wordObj.original_text || "").trim() === "";
+                        if (!isSpaceObj) {
+                            const isModified = wordObj.text !== wordObj.original_text;
+                            if (showOnlyModified && !isModified) { globalId++; return; }
+
+                            const tr = document.createElement("tr");
+                            tr.className = isModified ? "bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 transition-colors" : "hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors";
+
+                            const inputId = `input_${sIndex}_${wIndex}`;
+                            const badgeId = `badge_${sIndex}_${wIndex}`;
+                            
+                            let wScriptText = wordObj.script_match || "[-]";
+                            let wScriptHTML = wScriptText === "[-]" 
+                                ? '<span class="text-slate-300 dark:text-slate-600 italic">[-]</span>'
+                                : wScriptText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+                            const sText = splitSpaces(wordObj.text);
+
+                            let modifiedContent = `
+                                <div class="flex items-center gap-3">
+                                    <input type="text" id="${inputId}" value="${sText.core.replace(/"/g, "&quot;")}" 
+                                        class="w-full px-3 py-1.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-all ${isModified ? "border-amber-300 text-blue-800 bg-white shadow-sm dark:bg-slate-800 dark:border-amber-500/50 dark:text-blue-300" : "border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"}" 
+                                        oninput="handleInlineEdit(${sIndex}, ${wIndex}, this.value)" 
+                                        onkeydown="handleInlineKeydown(event, ${sIndex}, ${wIndex}, this)" 
+                                        placeholder="(Đã xóa do JSON dư từ)" />
+                                    <span id="${badgeId}" class="${isModified ? "" : "hidden"} shrink-0 inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-amber-200 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200">
+                                        Đã sửa
+                                    </span>
+                                </div>
+                            `;
+
+                            tr.innerHTML = `
+                                <td class="px-4 py-2 border-x border-slate-200 dark:border-slate-700 text-center font-mono text-slate-400 dark:text-slate-500 align-middle">${globalId}</td>
+                                <td class="px-6 py-2 border-x border-slate-200 dark:border-slate-700 font-medium whitespace-pre-wrap align-middle ${isModified ? "line-through text-rose-400 dark:text-rose-500" : "text-slate-500 dark:text-slate-400"}">
+                                    ${wordObj.original_text}
+                                </td>
+                                <td class="px-6 py-2 border-x border-slate-200 dark:border-slate-700 align-middle font-medium text-indigo-700 bg-indigo-50/30 dark:text-indigo-300 dark:bg-indigo-900/20">
+                                    ${wScriptHTML}
+                                </td>
+                                <td class="px-6 py-2 border-x border-slate-200 dark:border-slate-700 align-middle">
+                                    ${modifiedContent}
+                                </td>
+                            `;
+                            tbody.appendChild(tr);
+                            displayCount++; globalId++;
+                        }
+                    });
+                });
+            }
+            document.getElementById("rowCount").textContent = displayCount;
+        }
+
+        function handleInlineEdit(sIndex, wIndex, newValue) {
+            const sentence = jsonData[sIndex];
+            const wordObj = sentence.words[wIndex];
+
+            const spaces = splitSpaces(wordObj.original_text || "");
+            wordObj.text = spaces.start + newValue + spaces.end;
+            
+            sentence.text = sentence.words.map((w) => w.text).join("");
+
+            const inputEl = document.getElementById(`input_${sIndex}_${wIndex}`);
+            const badgeEl = document.getElementById(`badge_${sIndex}_${wIndex}`);
+            const trEl = inputEl.closest("tr");
+            const origTdEl = trEl.querySelector("td:nth-child(2)");
+
+            const isModified = wordObj.text !== wordObj.original_text;
+
+            if (isModified) {
+                inputEl.className = "w-full px-3 py-1.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-all border-amber-300 text-blue-800 bg-white shadow-sm dark:bg-slate-800 dark:border-amber-500/50 dark:text-blue-300";
+                trEl.className = "bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 transition-colors";
+                origTdEl.className = "px-6 py-2 border-x border-slate-200 dark:border-slate-700 font-medium whitespace-pre-wrap align-middle line-through text-rose-400 dark:text-rose-500";
+                badgeEl.classList.remove("hidden");
+            } else {
+                inputEl.className = "w-full px-3 py-1.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-all border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200";
+                trEl.className = "hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors";
+                origTdEl.className = "px-6 py-2 border-x border-slate-200 dark:border-slate-700 font-medium whitespace-pre-wrap align-middle text-slate-500 dark:text-slate-400";
+                badgeEl.classList.add("hidden");
+            }
+        }
+
+        function handleInlineKeydown(event, sIndex, wIndex, inputEl) {
+            if (event.ctrlKey && event.key.toLowerCase() === "z") {
+                event.preventDefault();
+                const wordObj = jsonData[sIndex].words[wIndex];
+                const spaces = splitSpaces(wordObj.original_text || "");
+                inputEl.value = spaces.core;
+                handleInlineEdit(sIndex, wIndex, spaces.core);
+                showToast("Hoàn tác", "Đã khôi phục từ gốc", "info");
+            }
+        }
+
+        function downloadJSON() {
+            if (jsonData.length === 0) return;
+
+            const exportData = jsonData.map((item) => {
+                const copy = { ...item };
+                delete copy.original_text;
+                copy.text = copy.words.map((w) => w.text).join("");
+                
+                copy.words = copy.words.map((w) => {
+                    const wCopy = { ...w };
+                    delete wCopy.original_text;
+                    delete wCopy.script_match;
+                    return wCopy;
+                });
+                return copy;
+            });
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = originalFileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast("Thành công", "Tải xuống file hoàn tất.", "success");
+        }
+    </script>
+</body>
+</html>

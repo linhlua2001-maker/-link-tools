@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CapCut Sync Web Tool</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for premium dark look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4B5563;
+        }
+    </style>
+</head>
+<body class="bg-[#0b0c15] text-[#f1f1f5] min-h-screen font-sans">
+
+    <!-- Header Banner -->
+    <header class="border-b border-[#1f2035] bg-[#101124] py-5 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-[#6c63ff] to-purple-600 p-2.5 rounded-xl shadow-lg shadow-indigo-500/20">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">CapCut Timeline Resyncer</h1>
+                    <p class="text-xs text-gray-400">Đọc Project có sẵn → Tự động co dãn ảnh & tạo Keyframe chuyển động mượt mà</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3 text-xs bg-[#171833] border border-[#2a2c4c] px-4 py-2 rounded-lg">
+                <span class="flex h-2 w-2 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span>Chạy an toàn 100% tại trình duyệt của bạn</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- App Instructions for the New Workflow -->
+    <section class="max-w-7xl mx-auto px-4 mt-6">
+        <div class="bg-gradient-to-r from-[#14152e] to-[#121124] border border-[#2a2c4c] rounded-xl p-5 shadow-xl">
+            <h2 class="text-sm font-bold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Quy trình đồng bộ nhanh & Tạo Keyframe tự động
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs text-gray-300 leading-relaxed">
+                <div class="bg-[#090a14] p-3 rounded-lg border border-[#1a1b32]">
+                    <span class="text-indigo-400 font-bold block mb-1">BƯỚC 1</span>
+                    Kéo thả toàn bộ hình ảnh vào timeline CapCut theo đúng thứ tự. Sắp xếp tùy ý.
+                </div>
+                <div class="bg-[#090a14] p-3 rounded-lg border border-[#1a1b32]">
+                    <span class="text-indigo-400 font-bold block mb-1">BƯỚC 2</span>
+                    Tắt hoàn toàn CapCut. Tải tệp <code class="text-indigo-300 bg-[#1b1c34] px-1 rounded">draft_content.json</code> lên đây để đọc dữ liệu ảnh.
+                </div>
+                <div class="bg-[#090a14] p-3 rounded-lg border border-[#1a1b32]">
+                    <span class="text-indigo-400 font-bold block mb-1">BƯỚC 3</span>
+                    Dán danh sách mốc thời gian (ms), chọn các kiểu chuyển động Keyframe và tốc độ thu phóng.
+                </div>
+                <div class="bg-[#090a14] p-3 rounded-lg border border-[#1a1b32]">
+                    <span class="text-indigo-400 font-bold block mb-1">BƯỚC 4</span>
+                    Tải file JSON đã xử lý về, ghi đè lại vị trí cũ rồi mở CapCut lên để tận hưởng thành quả!
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- LEFT COLUMN: Inputs & Controls (7 Cols) -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- Step 1: Upload Mandatory draft_content.json -->
+                <div class="bg-[#101124] border border-[#1f2035] rounded-xl p-5 shadow-lg">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-bold">1</span>
+                            <h2 class="text-sm font-bold uppercase tracking-wider text-gray-300">Tải lên file draft_content.json từ CapCut</h2>
+                        </div>
+                        <span class="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded font-semibold">Bắt buộc</span>
+                    </div>
+
+                    <div class="border-2 border-dashed border-[#2a2c4c] hover:border-indigo-500/50 rounded-xl p-6 transition-colors relative bg-[#0d0e1a]/50">
+                        <input type="file" id="json-file-input" accept=".json" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleFileSelect(event)">
+                        <div class="text-center" id="upload-status-container">
+                            <svg class="mx-auto h-10 w-10 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            <p class="mt-2 text-xs font-semibold text-gray-300" id="upload-status-text">Chọn hoặc kéo thả file draft_content.json tại đây</p>
+                            <p class="mt-1 text-[10px] text-gray-500">File này nằm trong thư mục con của dự án trong com.lveditor.draft</p>
+                        </div>
+                    </div>
+
+                    <!-- Meta Information after upload -->
+                    <div id="project-meta-box" class="mt-4 bg-[#090a14] rounded-lg p-3.5 border border-[#1f2035] text-xs hidden">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <span class="text-gray-500">Tên dự án gốc:</span>
+                                <span class="font-bold text-gray-200 block truncate" id="meta-project-name">-</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Số lượng ảnh/video hiện tại:</span>
+                                <span class="font-bold text-indigo-400 block" id="meta-segments-count">0 clips</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Timestamps Input -->
+                <div class="bg-[#101124] border border-[#1f2035] rounded-xl p-5 shadow-lg space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-bold">2</span>
+                            <h2 class="text-sm font-bold uppercase tracking-wider text-gray-300">Nhập danh sách mốc thời gian bắt đầu (ms)</h2>
+                        </div>
+                        <span class="text-[10px] text-gray-400 font-mono" id="timestamp-count">0 mốc</span>
+                    </div>
+
+                    <div>
+                        <textarea id="timestamp-input" placeholder="0&#10;3500&#10;8200&#10;12100&#10;16500" rows="8" class="w-full bg-[#0d0e1a] border border-[#2a2c4c] focus:border-indigo-500 rounded-lg p-3.5 text-xs font-mono text-[#cbd5e1] focus:outline-none transition-colors leading-relaxed" oninput="updateCalculation()"></textarea>
+                        <p class="text-[10px] text-gray-500 mt-2 leading-normal">
+                            💡 Mỗi dòng là một con số đại diện cho mốc thời gian bắt đầu của từng ảnh theo mili-giây (ví dụ: dòng 1 là <code class="bg-[#1b1c34] text-indigo-300 px-0.5 rounded">0</code>, dòng 2 là <code class="bg-[#1b1c34] text-indigo-300 px-0.5 rounded">3500</code>). Mốc cuối cùng sẽ được làm điểm chặn kết thúc của ảnh cuối.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 3: Keyframe & Motion Configuration (NEW) -->
+                <div class="bg-[#101124] border border-[#1f2035] rounded-xl p-5 shadow-lg space-y-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-[#6c63ff]/10 text-[#6c63ff] text-xs font-bold">3</span>
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-gray-300">Cấu hình Hiệu ứng Chuyển động (Keyframe - Ken Burns)</h2>
+                    </div>
+
+                    <!-- Presets to Apply -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 mb-2.5">Chọn các chuyển động được phép áp dụng:</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <label class="flex items-center gap-2.5 bg-[#0d0e1a] border border-[#2a2c4c] p-2.5 rounded-lg text-xs cursor-pointer hover:border-indigo-500/50 transition-colors select-none">
+                                <input type="checkbox" id="move-zoom-in" checked class="rounded border-[#2a2c4c] text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 bg-[#0d0e1a]" onchange="updateCalculation()">
+                                <span>🔍 Zoom In</span>
+                            </label>
+                            <label class="flex items-center gap-2.5 bg-[#0d0e1a] border border-[#2a2c4c] p-2.5 rounded-lg text-xs cursor-pointer hover:border-indigo-500/50 transition-colors select-none">
+                                <input type="checkbox" id="move-zoom-out" checked class="rounded border-[#2a2c4c] text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 bg-[#0d0e1a]" onchange="updateCalculation()">
+                                <span>🔍 Zoom Out</span>
+                            </label>
+                            <label class="flex items-center gap-2.5 bg-[#0d0e1a] border border-[#2a2c4c] p-2.5 rounded-lg text-xs cursor-pointer hover:border-indigo-500/50 transition-colors select-none">
+                                <input type="checkbox" id="move-pan-left" checked class="rounded border-[#2a2c4c] text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 bg-[#0d0e1a]" onchange="updateCalculation()">
+                                <span>⬅️ Pan Left</span>
+                            </label>
+                            <label class="flex items-center gap-2.5 bg-[#0d0e1a] border border-[#2a2c4c] p-2.5 rounded-lg text-xs cursor-pointer hover:border-indigo-500/50 transition-colors select-none">
+                                <input type="checkbox" id="move-pan-right" checked class="rounded border-[#2a2c4c] text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 bg-[#0d0e1a]" onchange="updateCalculation()">
+                                <span>➡️ Pan Right</span>
+                            </label>
+                            <label class="flex items-center gap-2.5 bg-[#0d0e1a] border border-[#2a2c4c] p-2.5 rounded-lg text-xs cursor-pointer hover:border-indigo-500/50 transition-colors select-none">
+                                <input type="checkbox" id="move-pan-up" checked class="rounded border-[#2a2c4c] text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 bg-[#0d0e1a]" onchange="updateCalculation()">
+                                <span>⬆️ Pan Up</span>
+                            </label>
+                            <label class="flex items-center gap-2.5 bg-[#0d0e1a] border border-[#2a2c4c] p-2.5 rounded-lg text-xs cursor-pointer hover:border-indigo-500/50 transition-colors select-none">
+                                <input type="checkbox" id="move-pan-down" checked class="rounded border-[#2a2c4c] text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 bg-[#0d0e1a]" onchange="updateCalculation()">
+                                <span>⬇️ Pan Down</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Custom movement settings -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                        <!-- Zoom Speed -->
+                        <div>
+                            <label class="block text-[11px] font-medium text-gray-400 mb-1">Tốc độ Zoom (% / giây)</label>
+                            <div class="relative rounded-lg shadow-sm">
+                                <input type="number" id="zoom-speed" value="2" min="0.1" step="0.1" class="w-full bg-[#0d0e1a] border border-[#2a2c4c] focus:border-indigo-500 rounded-lg px-3 py-1.5 text-xs text-[#f1f1f5] focus:outline-none" oninput="updateCalculation()">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 text-[10px] font-mono">%/s</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pan Speed -->
+                        <div>
+                            <label class="block text-[11px] font-medium text-gray-400 mb-1">Tốc độ Pan (pixels / giây)</label>
+                            <div class="relative rounded-lg shadow-sm">
+                                <input type="number" id="pan-speed" value="60" min="5" step="5" class="w-full bg-[#0d0e1a] border border-[#2a2c4c] focus:border-indigo-500 rounded-lg px-3 py-1.5 text-xs text-[#f1f1f5] focus:outline-none" oninput="updateCalculation()">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 text-[10px] font-mono">px/s</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Base Pan scale factor -->
+                        <div>
+                            <label class="block text-[11px] font-medium text-gray-400 mb-1" title="Tỷ lệ zoom nhẹ mặc định khi Pan để tránh khoảng đen ở rìa ảnh">Scale nền khi Pan (để tránh viền đen)</label>
+                            <input type="number" id="pan-base-scale" value="1.15" min="1.0" max="2.0" step="0.05" class="w-full bg-[#0d0e1a] border border-[#2a2c4c] focus:border-indigo-500 rounded-lg px-3 py-1.5 text-xs text-[#f1f1f5] focus:outline-none" oninput="updateCalculation()">
+                        </div>
+                    </div>
+
+                    <!-- Distribution Order -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 mb-1.5">Quy luật phân bổ hiệu ứng chuyển động:</label>
+                        <select id="distribution-mode" class="w-full bg-[#0d0e1a] border border-[#2a2c4c] focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-[#f1f1f5] focus:outline-none cursor-pointer" onchange="updateCalculation()">
+                            <option value="sequential" selected>Tuần tự (Xoay vòng đều đặn giữa các kiểu chuyển động)</option>
+                            <option value="random">Ngẫu nhiên (Tự động trộn đều để tạo cảm giác bất ngờ)</option>
+                        </select>
+                    </div>
+
+                    <!-- Sync Status Info Panel -->
+                    <div id="status-panel" class="bg-[#161324] border border-[#301b4c] rounded-lg p-3.5 text-xs text-indigo-200 hidden">
+                        <div class="flex items-start gap-2">
+                            <svg class="w-4 h-4 text-indigo-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div class="space-y-1 w-full">
+                                <p class="font-bold">Trạng thái phân tích & so khớp:</p>
+                                <ul class="list-disc pl-4 space-y-1 text-[11px] text-gray-300" id="analysis-list">
+                                    <!-- Dynamic calculation details here -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Export/Overwrite Buttons -->
+                <div class="bg-[#101124] border border-[#1f2035] rounded-xl p-5 shadow-lg flex flex-col sm:flex-row items-center gap-4">
+                    <button onclick="exportModifiedJson()" id="btn-build" class="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-indigo-500/20 active:scale-95 flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        XUẤT FILE DRAFT_CONTENT.JSON ĐÃ SỬA
+                    </button>
+                    <div class="text-xs text-gray-400 text-center sm:text-left leading-normal">
+                        Bấm nút để tải trực tiếp file JSON mới. Bạn chỉ cần copy đè file này vào thư mục của CapCut.
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: Instructions, CapCut Paths & Preview (5 Cols) -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- Quick Finder Instructions -->
+                <div class="bg-[#101124] border border-[#1f2035] rounded-xl p-5 shadow-lg">
+                    <h2 class="text-sm font-bold text-gray-200 mb-3 uppercase tracking-wider flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        Cách tìm file draft_content.json nhanh
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Windows Platform -->
+                        <div class="bg-[#0d0e1a] border border-[#1f2035] rounded-lg p-3.5">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-xs font-bold text-gray-300 flex items-center gap-1">
+                                    <span class="text-blue-400">❖</span> Windows OS
+                                </span>
+                                <button onclick="copyPath('win')" class="text-[10px] text-indigo-400 hover:underline">Copy đường dẫn</button>
+                            </div>
+                            <code class="block text-[11px] text-gray-400 bg-[#16172d] p-2 rounded break-all select-all font-mono leading-relaxed" id="path-win">
+                                %LOCALAPPDATA%\CapCut\User Data\Projects\com.lveditor.draft\
+                            </code>
+                            <p class="text-[10px] text-gray-500 mt-1">💡 Bấm Windows + R, dán đường dẫn trên rồi gõ Enter để mở thư mục quản lý dự án CapCut.</p>
+                        </div>
+
+                        <!-- MacOS Platform -->
+                        <div class="bg-[#0d0e1a] border border-[#1f2035] rounded-lg p-3.5">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-xs font-bold text-gray-300 flex items-center gap-1">
+                                    <span class="text-gray-200"></span> macOS
+                                </span>
+                                <button onclick="copyPath('mac')" class="text-[10px] text-indigo-400 hover:underline">Copy đường dẫn</button>
+                            </div>
+                            <code class="block text-[11px] text-gray-400 bg-[#16172d] p-2 rounded break-all select-all font-mono leading-relaxed" id="path-mac">
+                                ~/Library/Containers/com.lemon.lvonewp/Data/Library/Application Support/CapCut/User Data/Projects/com.lveditor.draft/
+                            </code>
+                            <p class="text-[10px] text-gray-500 mt-1">💡 Mở Finder, nhấn Cmd+Shift+G rồi dán đường dẫn này vào.</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-[11px] text-gray-400 bg-[#090a14] rounded-lg p-3 border border-[#1f2035] leading-normal">
+                        📌 <strong>Sắp xếp theo ngày sửa đổi gần nhất (Date Modified)</strong> trong thư mục trên để tìm thấy đúng thư mục chứa dự án bạn vừa chỉnh sửa trong CapCut.
+                    </div>
+                </div>
+
+                <!-- Real-time Visual Timeline Preview -->
+                <div class="bg-[#101124] border border-[#1f2035] rounded-xl p-5 shadow-lg">
+                    <h2 class="text-sm font-bold text-gray-200 mb-3 uppercase tracking-wider flex justify-between items-center">
+                        <span>Preview Danh Sách Timeline</span>
+                        <span id="detected-count-badge" class="text-xs bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded font-mono">0 clips</span>
+                    </h2>
+                    
+                    <div id="timeline-container" class="space-y-2 max-h-[480px] overflow-y-auto pr-1">
+                        <!-- Dynamic segment boxes here -->
+                        <div class="text-center py-12 text-xs text-gray-500">
+                            Vui lòng tải file draft_content.json ở Bước 1 để bắt đầu quét timeline.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Custom Alert Modal (Replaces unsafe window.alert) -->
+    <div id="custom-alert" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden transition-opacity">
+        <div class="bg-[#101124] border border-[#2a2c4c] rounded-2xl max-w-md w-full p-6 shadow-2xl transform scale-95 transition-transform">
+            <div class="flex items-center gap-3 text-amber-400 mb-3" id="alert-icon-title">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <h3 class="text-base font-bold text-gray-200" id="alert-title">Thông báo</h3>
+            </div>
+            <p class="text-sm text-gray-300 leading-relaxed mb-6" id="alert-message">Nội dung thông báo ở đây.</p>
+            <div class="flex justify-end">
+                <button onclick="closeAlert()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors">
+                    Đồng ý
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-modal" class="fixed bottom-6 right-6 bg-[#16183a] border border-indigo-500/30 text-white px-5 py-3 rounded-xl shadow-2xl transition-all transform translate-y-20 opacity-0 flex items-center gap-3 text-sm z-50">
+        <span class="bg-indigo-500/10 text-indigo-400 p-1 rounded-lg">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+            </svg>
+        </span>
+        <span id="toast-msg">Thao tác thành công!</span>
+    </div>
+
+    <!-- JavaScript Core Logic -->
+    <script>
+        // Main data storage
+        let activeProjectData = null; 
+        let detectedSegments = []; // Extracted sequential video segments
+
+        // Show Custom Alert
+        function showAlert(title, message, isError = false) {
+            const modal = document.getElementById('custom-alert');
+            const titleEl = document.getElementById('alert-title');
+            const msgEl = document.getElementById('alert-message');
+            const iconTitle = document.getElementById('alert-icon-title');
+            
+            titleEl.innerText = title;
+            msgEl.innerHTML = message;
+            
+            if (isError) {
+                iconTitle.className = "flex items-center gap-3 text-red-500 mb-3";
+            } else {
+                iconTitle.className = "flex items-center gap-3 text-indigo-400 mb-3";
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeAlert() {
+            document.getElementById('custom-alert').classList.add('hidden');
+        }
+
+        // Show Toast Utility
+        function showToast(msg) {
+            const toast = document.getElementById('toast-modal');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        // Copy Clipboard Helper
+        function copyPath(type) {
+            const elId = type === 'win' ? 'path-win' : 'path-mac';
+            const textToCopy = document.getElementById(elId).innerText.trim();
+            
+            const textarea = document.createElement("textarea");
+            textarea.value = textToCopy;
+            textarea.style.position = "fixed";
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast("Đã copy đường dẫn thành công!");
+            } catch (err) {
+                console.error("Lỗi khi copy đường dẫn: ", err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // Retrieve local file name representing the CapCut material
+        function getMaterialFileName(materialId) {
+            if (!activeProjectData || !activeProjectData.materials) return "Clip_chưa_rõ_tên";
+            
+            for (const category in activeProjectData.materials) {
+                const list = activeProjectData.materials[category];
+                if (Array.isArray(list)) {
+                    const found = list.find(m => m.id === materialId);
+                    if (found) {
+                        const rawPath = found.path || found.file_Path || found.media_path || "";
+                        if (rawPath) {
+                            // Extract file name from windows path or unix path
+                            const winName = rawPath.substring(rawPath.lastIndexOf('\\') + 1);
+                            const unixName = rawPath.substring(rawPath.lastIndexOf('/') + 1);
+                            return winName.length < unixName.length ? winName : unixName;
+                        }
+                        return found.name || "Asset_Media";
+                    }
+                }
+            }
+            return "Asset_ẩn";
+        }
+
+        // Extract sequential segments in the main video track
+        function extractVideoSegments(projectJson) {
+            if (!projectJson || !projectJson.tracks) return [];
+            
+            // Find the video track (CapCut's main track usually has type: "video")
+            const videoTracks = projectJson.tracks.filter(track => track.type === "video");
+            if (videoTracks.length === 0) return [];
+            
+            // Usually, track at index 0 or marked as main is the one. Let's merge or take the first track segments
+            let allSegments = [];
+            videoTracks.forEach(track => {
+                if (track.segments && Array.isArray(track.segments)) {
+                    allSegments = [...allSegments, ...track.segments];
+                }
+            });
+
+            // Sort segments sequentially based on their current start target time
+            allSegments.sort((a, b) => {
+                const startA = (a.target_timerange && a.target_timerange.start) ? a.target_timerange.start : 0;
+                const startB = (b.target_timerange && b.target_timerange.start) ? b.target_timerange.start : 0;
+                return startA - startB;
+            });
+
+            return allSegments;
+        }
+
+        // Handling uploaded draft_content.json file
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const parsed = JSON.parse(evt.target.result);
+                    
+                    // Check if it's a valid CapCut workspace content file
+                    if (parsed.tracks && Array.isArray(parsed.tracks)) {
+                        activeProjectData = parsed;
+                        detectedSegments = extractVideoSegments(parsed);
+
+                        if (detectedSegments.length === 0) {
+                            showAlert("Lỗi Project", "Không tìm thấy bất kỳ rãnh hình ảnh/video nào trong dự án này. Hãy kéo ảnh vào CapCut trước!", true);
+                            return;
+                        }
+
+                        // UI Metadata Updates
+                        document.getElementById('meta-project-name').innerText = parsed.name || "Không rõ tên";
+                        document.getElementById('meta-segments-count').innerText = `${detectedSegments.length} clips`;
+                        document.getElementById('detected-count-badge').innerText = `${detectedSegments.length} clips`;
+                        document.getElementById('project-meta-box').classList.remove('hidden');
+                        
+                        document.getElementById('upload-status-text').innerHTML = `
+                            <span class="text-emerald-400 font-bold">✓ Đã nhận dự án:</span> ${file.name}
+                        `;
+
+                        updateCalculation();
+                        showToast("Đã phân tích cấu trúc timeline của CapCut thành công!");
+                    } else {
+                        showAlert("Lỗi định dạng", "File tải lên không có rãnh timeline nào hợp lệ. Đảm bảo bạn đã chọn đúng file <strong>draft_content.json</strong> của CapCut.", true);
+                    }
+                } catch(err) {
+                    showAlert("Lỗi đọc file", "Không thể phân tích dữ liệu JSON: " + err.message, true);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Parse inputted raw timestamps text from user
+        function getParsedTimestamps() {
+            const tsText = document.getElementById('timestamp-input').value;
+            const timestamps = tsText.split('\n')
+                .map(line => line.trim())
+                .filter(line => line !== '')
+                .map(Number)
+                .filter(num => !isNaN(num));
+
+            // Automatically sort timestamps chronologically to prevent sequence breaking
+            timestamps.sort((a, b) => a - b);
+            return timestamps;
+        }
+
+        // Custom UID generation like Python uuid4 in CapCut
+        function generateUid() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16).toUpperCase();
+            });
+        }
+
+        // Map existing CapCut timeline segments with user-defined start times
+        function updateCalculation() {
+            const timestamps = getParsedTimestamps();
+            document.getElementById('timestamp-count').innerText = `${timestamps.length} mốc`;
+
+            const statusPanel = document.getElementById('status-panel');
+            const analysisList = document.getElementById('analysis-list');
+            const timelineContainer = document.getElementById('timeline-container');
+
+            if (!activeProjectData || detectedSegments.length === 0) {
+                return null;
+            }
+
+            statusPanel.classList.remove('hidden');
+            analysisList.innerHTML = '';
+            
+            let issues = [];
+            let n = detectedSegments.length;
+            let mappedTimeline = [];
+
+            // Case 1: Ideal case (Timestamps = Segments + 1). The last timestamp serves as the end boundary of the last clip
+            if (timestamps.length === n + 1) {
+                issues.push(`Khớp chính xác tuyệt đối: Có <strong>${n} ảnh/video</strong> và nhận diện đủ <strong>${n + 1} mốc thời gian</strong> (Mốc cuối cùng dùng làm thời điểm kết thúc).`);
+                for (let i = 0; i < n; i++) {
+                    const start = timestamps[i];
+                    const end = timestamps[i + 1];
+                    mappedTimeline.push({
+                        segment: detectedSegments[i],
+                        fileName: getMaterialFileName(detectedSegments[i].material_id),
+                        start: start,
+                        end: end,
+                        duration: end - start
+                    });
+                }
+            } 
+            // Case 2: Timestamps count equals segments count
+            else if (timestamps.length === n) {
+                issues.push(`Bạn đã nhập <strong>${n} mốc</strong> cho <strong>${n} ảnh</strong>. Tool tự động đặt thời lượng cho ảnh cuối cùng là <span class="text-amber-400 font-bold">5 giây (5000ms)</span>.`);
+                for (let i = 0; i < n; i++) {
+                    const start = timestamps[i];
+                    let end = 0;
+                    if (i < n - 1) {
+                        end = timestamps[i + 1];
+                    } else {
+                        end = start + 5000; 
+                    }
+                    mappedTimeline.push({
+                        segment: detectedSegments[i],
+                        fileName: getMaterialFileName(detectedSegments[i].material_id),
+                        start: start,
+                        end: end,
+                        duration: end - start
+                    });
+                }
+            }
+            // Case 3: More timestamps than existing segments
+            else if (timestamps.length > n) {
+                const excess = timestamps.length - (n + 1);
+                issues.push(`<span class="text-amber-400 font-bold">Lưu ý:</span> Bạn nhập dư mốc thời gian (${timestamps.length} mốc) so với số lượng hình ảnh trên CapCut (${n} ảnh). Công cụ sẽ chỉ lấy ${n + 1} mốc đầu.`);
+                for (let i = 0; i < n; i++) {
+                    const start = timestamps[i];
+                    const end = timestamps[i + 1];
+                    mappedTimeline.push({
+                        segment: detectedSegments[i],
+                        fileName: getMaterialFileName(detectedSegments[i].material_id),
+                        start: start,
+                        end: end,
+                        duration: end - start
+                    });
+                }
+            }
+            // Case 4: Fewer timestamps than segments
+            else {
+                const missing = n - timestamps.length;
+                issues.push(`<span class="text-amber-400 font-bold">Cảnh báo:</span> Thiếu mốc thời gian. Project của bạn có <strong>${n} ảnh</strong> nhưng bạn chỉ nhập <strong>${timestamps.length} mốc</strong>. Kể từ ảnh số ${timestamps.length + 1}, các ảnh thiếu sẽ tự động nhận thời lượng đệm <span class="text-amber-400 font-bold">3 giây (3000ms)</span> gối đầu.`);
+                
+                for (let i = 0; i < n; i++) {
+                    let start = 0;
+                    let end = 0;
+                    
+                    if (i < timestamps.length) {
+                        start = timestamps[i];
+                        if (i < timestamps.length - 1) {
+                            end = timestamps[i + 1];
+                        } else {
+                            end = start + 3000;
+                        }
+                    } else {
+                        start = mappedTimeline[i - 1].end;
+                        end = start + 3000;
+                    }
+
+                    mappedTimeline.push({
+                        segment: detectedSegments[i],
+                        fileName: getMaterialFileName(detectedSegments[i].material_id),
+                        start: start,
+                        end: end,
+                        duration: end - start
+                    });
+                }
+            }
+
+            // --- KEYFRAME GENERATION & DISTRIBUTION LOGIC (NEW) ---
+            const enabledMoves = [];
+            if (document.getElementById('move-zoom-in').checked) enabledMoves.push('zoom_in');
+            if (document.getElementById('move-zoom-out').checked) enabledMoves.push('zoom_out');
+            if (document.getElementById('move-pan-left').checked) enabledMoves.push('pan_left');
+            if (document.getElementById('move-pan-right').checked) enabledMoves.push('pan_right');
+            if (document.getElementById('move-pan-up').checked) enabledMoves.push('pan_up');
+            if (document.getElementById('move-pan-down').checked) enabledMoves.push('pan_down');
+
+            const distMode = document.getElementById('distribution-mode').value;
+            const zoomSpeed = parseFloat(document.getElementById('zoom-speed').value) || 2;
+            const panSpeed = parseFloat(document.getElementById('pan-speed').value) || 60;
+            const panBaseScale = parseFloat(document.getElementById('pan-base-scale').value) || 1.15;
+
+            // Simple deterministic/random selection for UI consistency
+            mappedTimeline.forEach((item, idx) => {
+                if (enabledMoves.length === 0) {
+                    item.motionType = 'static';
+                    return;
+                }
+                
+                let selectedMove = '';
+                if (distMode === 'sequential') {
+                    selectedMove = enabledMoves[idx % enabledMoves.length];
+                } else {
+                    // Seed-based stable random so UI doesn't flicker wildly on every keypress
+                    const seed = (idx + 7) * 113;
+                    const randomIdx = Math.floor((Math.abs(Math.sin(seed)) * 1000)) % enabledMoves.length;
+                    selectedMove = enabledMoves[randomIdx];
+                }
+
+                item.motionType = selectedMove;
+                
+                // Calculate dynamic transformation offsets based on speed & duration
+                const durationSec = item.duration / 1000;
+                
+                if (selectedMove === 'zoom_in') {
+                    const maxZoom = 1.0 + (zoomSpeed / 100) * durationSec;
+                    item.motionDetail = `🔍 Zoom: 1.00 ➔ ${maxZoom.toFixed(2)} (${zoomSpeed}%/s)`;
+                    item.kfData = {
+                        startScale: 1.0, endScale: maxZoom,
+                        startTransX: 0, endTransX: 0,
+                        startTransY: 0, endTransY: 0
+                    };
+                } else if (selectedMove === 'zoom_out') {
+                    const maxZoom = 1.0 + (zoomSpeed / 100) * durationSec;
+                    item.motionDetail = `🔍 Zoom: ${maxZoom.toFixed(2)} ➔ 1.00 (${zoomSpeed}%/s)`;
+                    item.kfData = {
+                        startScale: maxZoom, endScale: 1.0,
+                        startTransX: 0, endTransX: 0,
+                        startTransY: 0, endTransY: 0
+                    };
+                } else if (selectedMove === 'pan_left') {
+                    const deltaX = panSpeed * durationSec;
+                    item.motionDetail = `⬅️ Trượt trái: X: ${(deltaX/2).toFixed(0)} ➔ ${(-deltaX/2).toFixed(0)}px`;
+                    item.kfData = {
+                        startScale: panBaseScale, endScale: panBaseScale,
+                        startTransX: deltaX / 2, endTransX: -deltaX / 2,
+                        startTransY: 0, endTransY: 0
+                    };
+                } else if (selectedMove === 'pan_right') {
+                    const deltaX = panSpeed * durationSec;
+                    item.motionDetail = `➡️ Trượt phải: X: ${(-deltaX/2).toFixed(0)} ➔ ${(deltaX/2).toFixed(0)}px`;
+                    item.kfData = {
+                        startScale: panBaseScale, endScale: panBaseScale,
+                        startTransX: -deltaX / 2, endTransX: deltaX / 2,
+                        startTransY: 0, endTransY: 0
+                    };
+                } else if (selectedMove === 'pan_up') {
+                    const deltaY = panSpeed * durationSec;
+                    item.motionDetail = `⬆️ Trượt lên: Y: ${(-deltaY/2).toFixed(0)} ➔ ${(deltaY/2).toFixed(0)}px`;
+                    item.kfData = {
+                        startScale: panBaseScale, endScale: panBaseScale,
+                        startTransX: 0, endTransX: 0,
+                        startTransY: -deltaY / 2, endTransY: deltaY / 2
+                    };
+                } else if (selectedMove === 'pan_down') {
+                    const deltaY = panSpeed * durationSec;
+                    item.motionDetail = `⬇️ Trượt xuống: Y: ${(deltaY/2).toFixed(0)} ➔ ${(-deltaY/2).toFixed(0)}px`;
+                    item.kfData = {
+                        startScale: panBaseScale, endScale: panBaseScale,
+                        startTransX: 0, endTransX: 0,
+                        startTransY: deltaY / 2, endTransY: -deltaY / 2
+                    };
+                }
+            });
+
+            // Print analysis text
+            issues.forEach(issue => {
+                const li = document.createElement('li');
+                li.innerHTML = issue;
+                analysisList.appendChild(li);
+            });
+
+            // Calculate total duration in ms
+            const totalProjectMs = mappedTimeline[mappedTimeline.length - 1].end;
+            const totalSec = (totalProjectMs / 1000).toFixed(2);
+            
+            const totalLi = document.createElement('li');
+            totalLi.innerHTML = `Tổng thời lượng rãnh hình ảnh sau khi kéo dãn: <span class="text-indigo-400 font-bold">${totalProjectMs} ms</span> (~${totalSec} giây).`;
+            analysisList.appendChild(totalLi);
+
+            // Render Preview Table on Right
+            timelineContainer.innerHTML = '';
+            mappedTimeline.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = "bg-[#16172e] hover:bg-[#1a1b38] border border-[#252747] p-2.5 rounded-lg flex items-center justify-between gap-3 transition-colors text-[11px]";
+                
+                let motionBadge = `<span class="text-gray-500 text-[10px]">🔒 Tĩnh</span>`;
+                if (item.motionType !== 'static') {
+                    const icons = {
+                        zoom_in: '🔍 In',
+                        zoom_out: '🔍 Out',
+                        pan_left: '⬅️ Trượt trái',
+                        pan_right: '➡️ Trượt phải',
+                        pan_up: '⬆️ Trượt lên',
+                        pan_down: '⬇️ Trượt xuống'
+                    };
+                    motionBadge = `<span class="text-emerald-400 font-semibold text-[10px] bg-emerald-500/10 px-1.5 py-0.5 rounded">${icons[item.motionType]}</span>`;
+                }
+
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="w-5 h-5 flex items-center justify-center rounded bg-indigo-500/10 text-indigo-400 font-mono text-[10px] font-bold flex-shrink-0">${idx + 1}</span>
+                        <div class="min-w-0">
+                            <p class="font-semibold text-gray-200 truncate" title="${item.fileName}">${item.fileName}</p>
+                            <p class="text-[9px] text-gray-400 truncate mt-0.5 font-mono">${item.motionDetail || 'Giữ nguyên vị trí tĩnh'}</p>
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0 font-mono">
+                        <div class="text-indigo-400 font-bold">${item.start}ms - ${item.end}ms</div>
+                        <div class="mt-1">${motionBadge}</div>
+                    </div>
+                `;
+                timelineContainer.appendChild(div);
+            });
+
+            return mappedTimeline;
+        }
+
+        // Apply modifications and save the final draft_content.json file
+        function exportModifiedJson() {
+            if (!activeProjectData) {
+                showAlert("Chưa tải file JSON", "Vui lòng tải tệp <strong>draft_content.json</strong> của bạn lên ở Bước 1 trước!", true);
+                return;
+            }
+
+            const timestamps = getParsedTimestamps();
+            if (timestamps.length === 0) {
+                showAlert("Chưa nhập thời gian", "Vui lòng nhập danh sách các mốc thời gian bắt đầu ở Bước 2!", true);
+                return;
+            }
+
+            const mappedData = updateCalculation();
+            if (!mappedData || mappedData.length === 0) return;
+
+            // Clone deep to avoid mutating original states unexpectedly
+            const outputJson = JSON.parse(JSON.stringify(activeProjectData));
+
+            // Find video track reference in cloned data
+            const clonedVideoTracks = outputJson.tracks.filter(t => t.type === "video");
+            
+            // Re-order segments exactly like we did during calculations
+            let clonedSegments = [];
+            clonedVideoTracks.forEach(track => {
+                if (track.segments && Array.isArray(track.segments)) {
+                    clonedSegments = [...clonedSegments, ...track.segments];
+                }
+            });
+            clonedSegments.sort((a, b) => {
+                const startA = (a.target_timerange && a.target_timerange.start) ? a.target_timerange.start : 0;
+                const startB = (b.target_timerange && b.target_timerange.start) ? b.target_timerange.start : 0;
+                return startA - startB;
+            });
+
+            // Apply new time structures to segments and materials
+            mappedData.forEach((mappedItem, idx) => {
+                const targetSeg = clonedSegments[idx];
+                if (!targetSeg) return;
+
+                const startUs = mappedItem.start * 1000;
+                const durationUs = mappedItem.duration * 1000;
+
+                // 1. Update target placement on track
+                if (!targetSeg.target_timerange) targetSeg.target_timerange = {};
+                targetSeg.target_timerange.start = startUs;
+                targetSeg.target_timerange.duration = durationUs;
+
+                // 2. Update source crop duration
+                if (!targetSeg.source_timerange) targetSeg.source_timerange = {};
+                targetSeg.source_timerange.start = 0;
+                targetSeg.source_timerange.duration = durationUs;
+
+                // 3. Clear existing keyframe arrays to inject cleanly
+                targetSeg.common_keyframes = [];
+                targetSeg.key_frame_refs = [];
+
+                // 4. If motion effect is selected, inject CapCut-compatible Keyframe Objects
+                if (mappedItem.motionType && mappedItem.motionType !== 'static' && mappedItem.kfData) {
+                    const kfData = mappedItem.kfData;
+
+                    // Frame 1: At starting time offset = 0
+                    const kf1_Id = generateUid();
+                    const kf1_Obj = {
+                        "id": kf1_Id,
+                        "keyframe_control_type": 0,
+                        "time_offset": 0,
+                        "clip": {
+                            "alpha": 1.0,
+                            "flip": { "horizontal": false, "vertical": false },
+                            "rotation": 0.0,
+                            "scale": { "x": kfData.startScale, "y": kfData.startScale },
+                            "translation": { "x": kfData.startTransX, "y": kfData.startTransY }
+                        }
+                    };
+
+                    // Frame 2: At ending time offset = durationUs
+                    const kf2_Id = generateUid();
+                    const kf2_Obj = {
+                        "id": kf2_Id,
+                        "keyframe_control_type": 0,
+                        "time_offset": durationUs,
+                        "clip": {
+                            "alpha": 1.0,
+                            "flip": { "horizontal": false, "vertical": false },
+                            "rotation": 0.0,
+                            "scale": { "x": kfData.endScale, "y": kfData.endScale },
+                            "translation": { "x": kfData.endTransX, "y": kfData.endTransY }
+                        }
+                    };
+
+                    // Insert to Segment structure
+                    targetSeg.common_keyframes.push(kf1_Obj, kf2_Obj);
+                    targetSeg.key_frame_refs.push(kf1_Id, kf2_Id);
+
+                    // Set default segment transform base as the starting transform keyframe to avoid jumping
+                    if (!targetSeg.clip) targetSeg.clip = {};
+                    targetSeg.clip.scale = { "x": kfData.startScale, "y": kfData.startScale };
+                    targetSeg.clip.translation = { "x": kfData.startTransX, "y": kfData.startTransY };
+                } else {
+                    // Static clip: Reset scale and translation to 1.0 & 0
+                    if (!targetSeg.clip) targetSeg.clip = {};
+                    targetSeg.clip.scale = { "x": 1.0, "y": 1.0 };
+                    targetSeg.clip.translation = { "x": 0.0, "y": 0.0 };
+                }
+
+                // 5. Sync the corresponding asset master material duration in CapCut's pool
+                const matId = targetSeg.material_id;
+                if (outputJson.materials) {
+                    for (const category in outputJson.materials) {
+                        const list = outputJson.materials[category];
+                        if (Array.isArray(list)) {
+                            const foundMaterial = list.find(m => m.id === matId);
+                            if (foundMaterial) {
+                                foundMaterial.duration = durationUs;
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Update project total duration indicator (microseconds)
+            const finalEndUs = mappedData[mappedData.length - 1].end * 1000;
+            outputJson.duration = finalEndUs;
+            outputJson.update_time = Math.floor(Date.now() / 1000);
+
+            // Export direct JSON file to browser
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(outputJson, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "draft_content.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            document.body.removeChild(downloadAnchor);
+
+            showToast("Đã tải tệp draft_content.json đã sửa đổi thành công!");
+            showAlert("Hoàn thành!", `
+                <div class="space-y-2 text-xs">
+                    <p class="text-emerald-400 font-bold">🎉 Đồng bộ, căn chỉnh thời gian & áp dụng Keyframe thành công!</p>
+                    <p>Hãy làm theo hướng dẫn sau để áp dụng vào CapCut:</p>
+                    <ol class="list-decimal pl-4 space-y-1 text-gray-300">
+                        <li>Truy cập thư mục chứa dự án hiện tại của bạn trên máy tính.</li>
+                        <li>Ghi đè file <code class="text-indigo-300 px-1 py-0.5 bg-indigo-950 rounded">draft_content.json</code> vừa tải về vào đó.</li>
+                        <li>Mở lại CapCut và tận hưởng thành quả! Các hình ảnh của bạn giờ đây đã được đồng bộ chuẩn thời gian kèm theo hiệu ứng Ken Burns chuyển động mượt mà.</li>
+                    </ol>
+                </div>
+            `);
+        }
+    </script>
+
+</body>
+</html>

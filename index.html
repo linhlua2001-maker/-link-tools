@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lửa's Tools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Liquid gradient animated background */
+            background: linear-gradient(135deg, #020617, #0f172a, #2e1065, #431407);
+            background-size: 400% 400%;
+            animation: liquidBg 15s ease infinite;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        @keyframes liquidBg {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .bg-gradient-text {
+            /* Fire Orange Gradient */
+            background: linear-gradient(90deg, #ff7e5f, #feb47b, #ff7e5f); 
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fireText 3s linear infinite;
+        }
+
+        @keyframes fireText {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        .card-bg {
+            /* Glassmorphism / Transparent Liquid effect */
+            background-color: rgba(30, 41, 59, 0.35); 
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .card-hover:hover {
+             border-color: rgba(255, 126, 95, 0.4); /* Subtle orange border */
+             transform: translateY(-3px);
+             box-shadow: 0 15px 35px -5px rgba(255, 126, 95, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+        }
+
+        .icon-wrapper {
+            background-color: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Active card top border gradient */
+        .card-active::before {
+            content: "";
+            position: absolute;
+            top: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #ff7e5f, #feb47b);
+            border-top-left-radius: 1rem;
+            border-top-right-radius: 1rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-16 px-4 sm:px-6 lg:px-8">
+
+    <header class="text-center mb-16 max-w-3xl mx-auto w-full">
+        <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4">
+            <span class="bg-gradient-text">Lửa's Tools</span>
+        </h1>
+        <p class="text-slate-400 text-lg">
+            Access your suite of powerful tools for subtitle processing and video syncing.
+        </p>
+    </header>
+
+    <main class="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- Card 1: SRT to Json -->
+        <a href="srt-to-json/srt-to-json.html" class="block relative rounded-2xl p-6 card-bg card-hover transition-all duration-300 ease-in-out group flex flex-col h-full">
+            <div class="mb-5">
+                <div class="icon-wrapper w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-inner">
+                    <span class="text-2xl" role="img" aria-label="document">📝</span>
+                </div>
+            </div>
+            <h2 class="text-xl font-bold text-white mb-3 group-hover:text-orange-400 transition-colors">SRT to Json</h2>
+            <p class="text-slate-300 text-sm leading-relaxed flex-grow">
+                Chuyển SRT từ Capcut sang Json.
+            </p>
+            <div class="mt-4 pt-4 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span class="text-orange-400 text-sm font-medium flex items-center">
+                    Open Tool <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                </span>
+            </div>
+        </a>
+
+        <!-- Card 2: Sync Json -->
+        <a href="sync-json/sync-json.html" class="block relative rounded-2xl p-6 card-bg card-hover transition-all duration-300 ease-in-out group flex flex-col h-full">
+            <div class="mb-5">
+                <div class="icon-wrapper w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-inner">
+                    <span class="text-2xl" role="img" aria-label="sync">🔄</span>
+                </div>
+            </div>
+            <h2 class="text-xl font-bold text-white mb-3 group-hover:text-orange-400 transition-colors">Sync Json</h2>
+            <p class="text-slate-300 text-sm leading-relaxed flex-grow">
+                Đồng bộ File Json từ Xấu thành Đẹp.
+            </p>
+            <div class="mt-4 pt-4 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span class="text-orange-400 text-sm font-medium flex items-center">
+                    Open Tool <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                </span>
+            </div>
+        </a>
+
+        <!-- Card 3: Sync Timeline Capcut -->
+        <a href="match-capcut/match-capcut.html" class="block relative rounded-2xl p-6 card-bg card-hover transition-all duration-300 ease-in-out group flex flex-col h-full">
+            <div class="mb-5">
+                <div class="icon-wrapper w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-inner">
+                    <span class="text-2xl" role="img" aria-label="clapperboard">🎬</span>
+                </div>
+            </div>
+            <h2 class="text-xl font-bold text-white mb-3 group-hover:text-orange-400 transition-colors">Sync Timeline Capcut</h2>
+            <p class="text-slate-300 text-sm leading-relaxed flex-grow">
+                Đồng bộ Ảnh với Voice trong capcut.
+            </p>
+            <div class="mt-4 pt-4 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span class="text-orange-400 text-sm font-medium flex items-center">
+                    Open Tool <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                </span>
+            </div>
+        </a>
+
+        <!-- Card 4: Map Scenes -->
+        <a href="map-scene/map-scene-ll.html" class="block relative rounded-2xl p-6 card-bg card-hover card-active transition-all duration-300 ease-in-out group flex flex-col h-full">
+            <div class="mb-5">
+                <div class="icon-wrapper w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-inner">
+                    <span class="text-2xl" role="img" aria-label="map">🗺️</span>
+                </div>
+            </div>
+            <h2 class="text-xl font-bold text-white mb-3 group-hover:text-orange-400 transition-colors">Map Scenes</h2>
+            <p class="text-slate-300 text-sm leading-relaxed flex-grow">
+                Đồng bộ Timestamps.
+            </p>
+            <div class="mt-4 pt-4 border-t border-white/10">
+                <span class="text-orange-400 text-sm font-medium flex items-center">
+                    Open Tool <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                </span>
+            </div>
+        </a>
+
+    </main>
+
+    <footer class="mt-20 text-center text-slate-500 text-sm w-full">
+        <p>&copy; 2026 Lửa's Tools. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>

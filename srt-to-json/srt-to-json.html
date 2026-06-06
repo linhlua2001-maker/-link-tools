@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRT to JSON Word-level Converter</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for premium dark look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4B5563;
+        }
+    </style>
+</head>
+<body class="bg-[#0b0c15] text-[#f1f1f5] min-h-screen font-sans">
+
+    <!-- Header Banner -->
+    <header class="border-b border-[#1f2035] bg-[#101124] py-5 px-6 shadow-md">
+        <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-[#6c63ff] to-purple-600 p-2.5 rounded-xl shadow-lg shadow-indigo-500/20">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">SRT to JSON Converter</h1>
+                    <p class="text-xs text-gray-400 mt-0.5">Tạo file JSON có cấu trúc word-level timestamp</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto mt-8 px-6 pb-12">
+        <div class="bg-[#15162c] border border-[#2a2b45] rounded-2xl p-6 shadow-xl relative overflow-hidden">
+            <!-- Decorative gradient orb -->
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="space-y-6 relative z-10">
+                <!-- Cấu hình ngôn ngữ -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Mã ngôn ngữ (Language Code)</label>
+                    <input type="text" id="langCode" value="en-US" class="w-full bg-[#0b0c15] border border-[#2a2b45] rounded-lg px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" placeholder="Ví dụ: en-US hoặc vi-VN">
+                </div>
+
+                <!-- Input File -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Tải lên file Subtitle (.srt)</label>
+                    <div id="dropzone" class="border-2 border-dashed border-[#2a2b45] rounded-xl p-8 text-center hover:border-indigo-500 hover:bg-[#1a1b36] transition-all cursor-pointer group">
+                        <input type="file" id="srtFileInput" accept=".srt" class="hidden">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#1f2035] group-hover:bg-indigo-500/20 mb-4 transition-colors">
+                            <svg class="w-6 h-6 text-gray-400 group-hover:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <p class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors" id="fileNameDisplay">Nhấn để chọn hoặc kéo thả file .srt vào đây</p>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="pt-2">
+                    <button id="convertBtn" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-medium py-3 px-4 rounded-xl shadow-lg shadow-indigo-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed" disabled>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Chuyển đổi và Tải JSON
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Area -->
+        <div class="mt-6">
+            <h3 class="text-sm font-medium text-gray-400 mb-2 pl-1">Trạng thái</h3>
+            <div id="logArea" class="bg-[#101124] border border-[#1f2035] rounded-xl p-4 h-32 overflow-y-auto font-mono text-xs text-gray-400 space-y-1">
+                <p>Chờ tải file .srt...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Message Box Overlay -->
+    <div id="messageBox" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-[#15162c] border border-[#2a2b45] p-6 rounded-2xl shadow-2xl max-w-sm w-full mx-4 transform scale-95 transition-transform duration-300" id="messageBoxContent">
+            <h3 class="text-lg font-bold text-white mb-2" id="messageTitle">Thông báo</h3>
+            <p class="text-sm text-gray-300 mb-6" id="messageText">Nội dung</p>
+            <div class="flex justify-end">
+                <button onclick="closeMessage()" class="bg-[#2a2b45] hover:bg-[#373856] text-white px-4 py-2 rounded-lg text-sm transition-colors">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const fileInput = document.getElementById('srtFileInput');
+        const dropzone = document.getElementById('dropzone');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const convertBtn = document.getElementById('convertBtn');
+        const logArea = document.getElementById('logArea');
+        const langCodeInput = document.getElementById('langCode');
+
+        let srtContent = "";
+        let originalFileName = "";
+
+        // Thêm log
+        function addLog(message, isError = false) {
+            const p = document.createElement('p');
+            p.textContent = `> ${message}`;
+            if (isError) p.className = "text-red-400";
+            else p.className = "text-indigo-300";
+            logArea.appendChild(p);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        // Custom Message Box
+        function showMessage(title, text) {
+            document.getElementById('messageTitle').innerText = title;
+            document.getElementById('messageText').innerText = text;
+            const box = document.getElementById('messageBox');
+            const content = document.getElementById('messageBoxContent');
+            box.classList.remove('hidden');
+            setTimeout(() => {
+                box.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeMessage() {
+            const box = document.getElementById('messageBox');
+            const content = document.getElementById('messageBoxContent');
+            box.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                box.classList.add('hidden');
+            }, 300);
+        }
+
+        // Handle File Input
+        dropzone.addEventListener('click', () => fileInput.click());
+
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('border-indigo-500', 'bg-[#1a1b36]');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('border-indigo-500', 'bg-[#1a1b36]');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('border-indigo-500', 'bg-[#1a1b36]');
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.name.toLowerCase().endsWith('.srt')) {
+                showMessage("Lỗi file", "Vui lòng chỉ chọn file có định dạng .srt");
+                return;
+            }
+
+            originalFileName = file.name.replace(/\.[^/.]+$/, ""); // Lấy tên file không có đuôi
+            fileNameDisplay.textContent = file.name;
+            fileNameDisplay.classList.add('text-indigo-400');
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                srtContent = e.target.result;
+                addLog(`Đã tải file thành công: ${file.name}`);
+                
+                // Kích hoạt nút bấm
+                convertBtn.disabled = false;
+                convertBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            };
+            reader.readAsText(file);
+        }
+
+        // Chuyển đổi chuỗi thời gian SRT (00:00:00,000) sang giây (float)
+        function timeToSeconds(timeStr) {
+            const parts = timeStr.split(':');
+            const secParts = parts[2].split(',');
+            return parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(secParts[0]) + parseInt(secParts[1]) / 1000;
+        }
+
+        // Xử lý chuyển đổi khi bấm nút
+        convertBtn.addEventListener('click', () => {
+            if (!srtContent) return;
+            
+            try {
+                addLog("Bắt đầu phân tích cú pháp SRT...");
+                const blocks = srtContent.trim().split(/\r?\n\r?\n/);
+                const jsonOutput = [];
+                const langCode = langCodeInput.value || "en-US";
+
+                blocks.forEach(block => {
+                    const lines = block.split(/\r?\n/);
+                    if (lines.length >= 3) {
+                        const timeLine = lines[1];
+                        const textLines = lines.slice(2).join(' ').trim();
+                        
+                        const timeMatches = timeLine.split(' --> ');
+                        if (timeMatches.length === 2) {
+                            const segmentStart = timeToSeconds(timeMatches[0].trim());
+                            const segmentEnd = timeToSeconds(timeMatches[1].trim());
+                            const duration = segmentEnd - segmentStart;
+                            
+                            // Tạo mảng words nội suy
+                            const wordsArray = [];
+                            const words = textLines.split(' ');
+                            
+                            // Tính toán thời gian cho mỗi ký tự để nội suy mượt hơn
+                            const totalChars = textLines.length;
+                            const timePerChar = duration / totalChars;
+
+                            let currentWordTime = segmentStart;
+
+                            for (let i = 0; i < words.length; i++) {
+                                const word = words[i];
+                                const wordDuration = word.length * timePerChar;
+                                const wordEndTime = currentWordTime + wordDuration;
+
+                                // Push chữ
+                                wordsArray.push({
+                                    text: word,
+                                    start: Number(currentWordTime.toFixed(3)),
+                                    end: Number(wordEndTime.toFixed(3)),
+                                    type: "word",
+                                    logprob: 0
+                                });
+
+                                currentWordTime = wordEndTime;
+
+                                // Push khoảng trắng (spacing) nếu không phải từ cuối cùng
+                                if (i < words.length - 1) {
+                                    const spaceDuration = 1 * timePerChar; // Khoảng trắng tính là 1 ký tự
+                                    const spaceEndTime = currentWordTime + spaceDuration;
+                                    
+                                    wordsArray.push({
+                                        text: " ",
+                                        start: Number(currentWordTime.toFixed(3)),
+                                        end: Number(spaceEndTime.toFixed(3)),
+                                        type: "spacing",
+                                        logprob: 0
+                                    });
+                                    
+                                    currentWordTime = spaceEndTime;
+                                }
+                            }
+
+                            // Tạo object cho JSON
+                            jsonOutput.push({
+                                language_code: langCode,
+                                language_probability: 0.968, // Hardcode probability giống mẫu
+                                text: textLines,
+                                words: wordsArray
+                            });
+                        }
+                    }
+                });
+
+                addLog(`Đã chuyển đổi thành công ${jsonOutput.length} phân đoạn (segments).`);
+                downloadJson(jsonOutput);
+
+            } catch (error) {
+                addLog(`Lỗi xử lý: ${error.message}`, true);
+                showMessage("Lỗi xử lý", "Có lỗi xảy ra trong quá trình đọc file SRT. Vui lòng kiểm tra lại định dạng file.");
+            }
+        });
+
+        // Hàm tải file JSON xuống
+        function downloadJson(data) {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+            const downloadAnchor = document.createElement('a');
+            const exportName = `${originalFileName}.json`;
+            
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", exportName);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            document.body.removeChild(downloadAnchor);
+
+            addLog(`Đã tải xuống file: ${exportName}`);
+            showMessage("Thành công!", `File JSON đã được tải xuống máy của bạn dưới tên: \n\n${exportName}`);
+        }
+    </script>
+</body>
+</html>
